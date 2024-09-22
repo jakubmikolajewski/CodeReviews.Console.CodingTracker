@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using System.CodeDom;
 
 namespace CodingTrackerLibrary
 {   
@@ -25,30 +26,26 @@ namespace CodingTrackerLibrary
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed update.\nDetails: {ex.Message}");
+                    Console.WriteLine($"Failed select.\nDetails: {ex.Message}");
                 }
             }
         }
         public static void UpdateQuery()
         {
             int rowChoice = UserInput.ChooseRow();
-            List<CodingSession> currentRow = SelectSingleRowQuery(rowChoice);
-            Console.WriteLine($"Updating row:\n" +
-                $"Id: {currentRow.ElementAt(0).Id}, " +
-                $"StartDate: {currentRow.ElementAt(0).StartDate}, " +
-                $"EndDate: {currentRow.ElementAt(0).EndDate}, " +
-                $"Duration: {currentRow.ElementAt(0).Duration}\n");
-
+            CodingSession currentRow = SelectSingleRowQuery(rowChoice);
+            TableVisualizationEngine.ShowSingleRow();
+            
             UserInput.ChooseColumns();
             UserInput.ChooseValues();
 
             if (!valuesToUpdate.ContainsKey("StartDate"))
             {
-                valuesToUpdate.Add("StartDate", currentRow.ElementAt(0).StartDate.ToString());
+                valuesToUpdate.Add("StartDate", currentRow.StartDate.ToString("yyyy-MM-dd HH:mm"));
             }
             if (!valuesToUpdate.ContainsKey("EndDate"))
             {
-                valuesToUpdate.Add("EndDate", currentRow.ElementAt(0).EndDate.ToString());
+                valuesToUpdate.Add("EndDate", currentRow.EndDate.ToString("yyyy-MM-dd HH:mm"));
             }
 
             try
@@ -91,7 +88,7 @@ namespace CodingTrackerLibrary
             {
                 CodingSession session = new CodingSession(startDate, endDate);
                 string command = "INSERT INTO 'Coding sessions' (StartDate, EndDate, Duration) VALUES (@StartDate, @EndDate, @Duration);";
-                object[] parameters = { new { StartDate = session.StartDate, EndDate = session.EndDate, Duration = session.Duration } };
+                object[] parameters = { new { StartDate = startDate, EndDate = endDate, Duration = session.Duration } };
 
                 DatabaseActions current = new DatabaseActions();
                 using (current.Connection)
@@ -133,26 +130,17 @@ namespace CodingTrackerLibrary
             Console.WriteLine("Deletion successful.");
         }
 
-        public static List<CodingSession> SelectSingleRowQuery(int rowChoice)
-        {     
-            List<CodingSession> sessions = [];
-
+        public static CodingSession SelectSingleRowQuery(int rowChoice)
+        {
+            CodingSession currentRow;
             string command = $"SELECT * FROM 'Coding sessions' WHERE Id = '{rowChoice}';";
-            Console.WriteLine(command);
             DatabaseActions current = new DatabaseActions();
             using (current.Connection)
             {
-                try
-                {
-                    CodingSession session = current.Connection.QuerySingle<CodingSession>(command);
-                    sessions.Add(session);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed single row query.\nDetails: {ex.Message}");
-                }
+                currentRow = current.Connection.QuerySingle<CodingSession>(command);
+                TableVisualizationEngine.selectSingleRow = currentRow;
             }
-            return sessions;
+            return currentRow;
         }
         public static List<long> SelectIdsQuery()
         {
@@ -179,7 +167,7 @@ namespace CodingTrackerLibrary
             }
             return ids;
         }
-        public static void InsertMeasuredSession(string startDate, string endDate, string duration)
+        public static void InsertMeasuredSession(string startDate, string endDate, int duration)
         {
             DatabaseActions current = new DatabaseActions();
             string command = "INSERT INTO 'Coding sessions' (StartDate, EndDate, Duration) VALUES (@StartDate, @EndDate, @Duration);";

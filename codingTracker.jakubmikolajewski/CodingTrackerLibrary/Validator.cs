@@ -20,11 +20,9 @@ namespace CodingTrackerLibrary
         }
         public static string ValidateDate()
         {
-            if (UserInput.ChooseNowAsDateTime())
-            {
-                return DateTime.Now.ToString("yyyy-MM-dd HH:mm");
-            }
-            string? date = Console.ReadLine();
+            string? date = UserInput.ChooseNowAsDateTime();
+            if (date is not null && date.Equals("now"))
+                date = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
             while (!DateTime.TryParseExact(date, "yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out DateTime dateResult))
             {
                 Console.WriteLine("Please enter a date in the correct format: (yyyy-MM-dd HH:mm)\n");

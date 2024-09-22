@@ -30,7 +30,7 @@ namespace CodingTrackerLibrary
                     break;
                 case "m":
                     string startDate = MeasureSessionTime();
-                    (string endDate, string duration) = StopTimer();
+                    (string endDate, int duration) = StopTimer();
                     CodingController.InsertMeasuredSession(startDate, endDate, duration);
                     break;
                 case "s":
@@ -100,14 +100,15 @@ namespace CodingTrackerLibrary
             string endDate = Validator.ValidateDate();
             return endDate;
         }
-        public static bool ChooseNowAsDateTime()
+        public static string ChooseNowAsDateTime()
         {
-            Console.WriteLine("If you wish to use the current datetime as an entry, type 'now'. Else, press any key, then enter a date (yyyy-MM-dd HH:mm):\n");
+            Console.WriteLine("If you wish to use the current datetime as an entry, type 'now'. Else, enter a date (yyyy-MM-dd HH:mm):\n");
             string? input = Console.ReadLine();
-            if (input is not null && input.Equals("now"))
-                return true;
-            else
-                return false;
+            if (input is not null)
+            {
+                return input;
+            }
+            else return "";
         }
         public static string MeasureSessionTime()
         {
@@ -118,11 +119,11 @@ namespace CodingTrackerLibrary
             Console.ReadLine();
             return startDate;
         }
-        public static (string, string) StopTimer()
+        public static (string, int) StopTimer()
         {
             timer.Stop();
             string endDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
-            string duration = string.Format("{0:0} hours, {1:D2} minutes", timer.Elapsed.Hours, timer.Elapsed.Minutes);
+            int duration = Convert.ToInt32(timer.Elapsed.TotalMinutes);
             return (endDate, duration);
         }
         public static DateTime SwitchPeriodMenuChoices(string periodMenuChoice)

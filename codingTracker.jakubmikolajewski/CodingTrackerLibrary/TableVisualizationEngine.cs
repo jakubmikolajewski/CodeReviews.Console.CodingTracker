@@ -6,6 +6,7 @@ namespace CodingTrackerLibrary
     {
         public static List<CodingSession> selectAllSessions = [];
         public static List<CodingGoals> selectAllGoals = [];
+        public static CodingSession? selectSingleRow;
         public static void ShowMenu()
         {
             var table = new Table();
@@ -42,8 +43,23 @@ namespace CodingTrackerLibrary
             table.AddRow("'all' - All time");
             AnsiConsole.Write(table);
         }
+
+        public static void ShowSingleRow()
+        {
+            var table = new Table();
+            table.Title = new TableTitle("Updating row", style: "yellow");
+            string[] columns = ["Id", "StartDate", "EndDate", "Duration"];
+            table.AddColumns(columns);
+            if (selectSingleRow is not null)
+            {
+                table.AddRow(selectSingleRow.Id.ToString(), selectSingleRow.StartDate.ToString("yyyy-MM-dd HH:mm"), selectSingleRow.EndDate.ToString("yyyy-MM-dd HH:mm"), selectSingleRow.Duration.ToString());
+            }
+            AnsiConsole.Write(table);
+        }
         public static void ShowCurrentGoalsStatus()
         {
+            string remainingFormatted;
+            string perDayFormatted;
             var table = new Table();
             string[] columns = ["GoalId", "GoalName", "DesiredHours", "ReachGoalBy", "RemainingToGoal", "HoursADay"];
             table.AddColumns(columns);
@@ -52,13 +68,20 @@ namespace CodingTrackerLibrary
             foreach (CodingGoals goal in selectAllGoals)
             {
                 int remainingToGoal = (goal.DesiredHours * 60) - currentTotalMinutes;
-                string remainingFormatted = GetHoursMinutesFormat(remainingToGoal);
+                if (remainingToGoal > 0)
+                {
+                    remainingFormatted = GetHoursMinutesFormat(remainingToGoal);
 
-                TimeSpan ts = goal.ReachGoalBy - DateTime.Now;
-                double hoursPerDay = remainingToGoal / ts.Days;
-                string perDayFormatted = GetHoursMinutesFormat(Convert.ToInt32(hoursPerDay));
-
-                table.AddRow(goal.GoalId.ToString(), goal.GoalName, goal.DesiredHours.ToString(), goal.ReachGoalBy.ToString(), remainingFormatted, perDayFormatted);
+                    TimeSpan ts = goal.ReachGoalBy - DateTime.Now;
+                    double hoursPerDay = remainingToGoal / ts.Days;
+                    perDayFormatted = GetHoursMinutesFormat(Convert.ToInt32(hoursPerDay));
+                }
+                else
+                {
+                    remainingFormatted = "Congrats! You have reached your goal!";
+                    perDayFormatted = "0";
+                }
+                table.AddRow(goal.GoalId.ToString(), goal.GoalName, goal.DesiredHours.ToString(), goal.ReachGoalBy.ToString("yyyy-MM-dd HH:mm"), remainingFormatted, perDayFormatted);
             }
             AnsiConsole.Write(table);
             selectAllGoals.Clear();
@@ -97,7 +120,7 @@ namespace CodingTrackerLibrary
 
             foreach (CodingSession x in filtered)
             {
-                table.AddRow(x.Id.ToString(), x.StartDate.ToString(), x.EndDate.ToString(), x.Duration.ToString());
+                table.AddRow(x.Id.ToString(), x.StartDate.ToString("yyyy-MM-dd HH:mm"), x.EndDate.ToString("yyyy-MM-dd HH:mm"), x.Duration.ToString());
             }
             AnsiConsole.Write(table);
             selectAllSessions.Clear();     
